@@ -17,7 +17,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 openai_client = OpenAI(api_key=api_key)
 
 # Directory path containing L1 Docs
-directory_path = "C:\\Personal\\Internship\\Sumeru\\RAG\\Adithya\\Adithya\\L1_Docs"
+directory_path = "Path to L1 Docs"
 
 # Load
 documents = SimpleDirectoryReader(directory_path).load_data()
