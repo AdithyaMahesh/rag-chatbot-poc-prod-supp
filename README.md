@@ -1,2 +1,1 @@
-# production-support-rag-chatbot
-RAG Chatbot for Prod Support
+RAG Chatbot POC for Prod Support
