@@ -1,73 +1,49 @@
 import streamlit as st
 import requests
+import json
 
-# Set Wide for page title and layout
-st.set_page_config(page_title="Production Support RAG Chatbot", layout="wide")
+st.set_page_config(page_title="RAG Chatbot", page_icon="🤖")
 
-st.title("Production Support RAG Chatbot")
-st.header("Ask your queries related to product support.")
+# Backend URL
+backend_url = "http://localhost:8000/chat"
 
-# Centered heading Chat
-st.markdown(
-    """
-    <h2 style='text-align: center; margin-top: 20px; margin-bottom: 20px;'>Chat</h2>
-    """,
-    unsafe_allow_html=True
-)
+st.title("Production Support RAG Chatbot💬")
+st.header("Ask your queries related to production support.")
 
-# Initialize session state for conversation history
-if 'conversation_history' not in st.session_state:
-    st.session_state.conversation_history = []
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "How can I assist you with production support today?"}
+    ]
 
-# Display conversation history
-def display_conversation():
-    for message in st.session_state.conversation_history:
-        if message['role'] == 'user':
-            st.markdown(f"<div style='background-color: #f5f5f5; color: #333333; padding: 10px; margin-bottom: 10px; border-radius: 10px; text-align: right; width: fit-content; max-width: 70%; margin-left: auto;'>{message['content']}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div style='background-color: #ffffff; color: #333333; font-size: 18px; padding: 12px; margin-bottom: 10px; border-radius: 10px; text-align: left; width: 70%; max-width: 800px; margin-right: auto;'><b>Bot:</b> {message['content']}</div>", unsafe_allow_html=True)
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-# Display conversation history - Calling
-display_conversation()
+def add_message(role, content):
+    st.session_state.messages.append({"role": role, "content": content})
+    with st.chat_message(role):
+        st.write(content)
 
-# Input and submit button section
-st.markdown("---")  # Horizontal rule for separation
+if prompt := st.chat_input("Your question:"):
+    add_message("user", prompt)
 
-# Create columns for input and button within the same line
-col1, col2, col3 = st.columns([1, 5, 1])  # Width Adjustments
+    try:
+        response = requests.post(backend_url, json={"prompt": prompt}, stream=True)
 
-# Left margin for spacing
-with col1:
-    st.write("")
+        assistant_message = ""
+        message_placeholder = st.empty()
+        for line in response.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8').strip()
+                if decoded_line == "data: [DONE]":
+                    break
+                if decoded_line.startswith("data: "):
+                    message_data = json.loads(decoded_line[6:])  # Strip 'data: ' prefix
+                    token = message_data["response"]
+                    assistant_message += token
+                    message_placeholder.markdown(assistant_message)
 
-# Input user query
-with col2:
-    query = st.text_input("Enter your query:", key="input_query")
-    st.write("") 
-
-# Submit button
-with col3:
-    st.write("") 
-    if st.button("Ask", key="submit_button"):
-        if query:
-            # Append user query to conversation history [Hope to display]
-            st.session_state.conversation_history.append({"role": "user", "content": query})
-
-            # Make API request to backend
-            response = requests.post(
-                "http://127.0.0.1:8000/query",
-                json={"query": query}
-            )
-            
-            if response.status_code == 200:
-                bot_response = response.json()['response']
-                # Append bot response to conversation history
-                st.session_state.conversation_history.append({"role": "assistant", "content": bot_response})
-            else:
-                st.session_state.conversation_history.append({"role": "assistant", "content": "Sorry, couldn't process your request at the moment."})
-            
-            # Clear the input box for new query
-            st.rerun()
-
-        else:
-            st.write("Please enter a query.")
+        # Update final message content
+        st.session_state.messages.append({"role": "assistant", "content": assistant_message})
+    except requests.exceptions.ChunkedEncodingError:
+        st.error("Error: Response ended prematurely. Please try again.")
