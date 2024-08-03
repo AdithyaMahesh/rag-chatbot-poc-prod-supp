@@ -6,3 +6,5 @@ Steps to run with and without virtual environment are in respectively named txt 
 
 backend_updatable_start.py and frontend_updatable_start.py are final ones,
 backeng_rag_chatbot.py and frontend_rag_chatbot.py are for PoC.
+
+Separate .env should be created too in same folder as python files with OPENAI_API_KEY variable = value, so that it can be used.
