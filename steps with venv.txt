@@ -1,0 +1,39 @@
+Steps to run Production Support RAG Chatbot
+
+Use files:
+backend_updatable_start.py
+frontend_updatable_start.py
+.env
+requirements.txt
+index (optional)
+in a folder
+
+open cmd (command prompt)
+Run: cd C:\Personal\Internship\Sumeru\RAG\Demo\final # Navigate to a folder where the files are
+in case it isn't in the folder of the files
+
+Then run:
+	python -m venv prod_supp_chatbot_venv
+	prod_supp_chatbot_venv\Scripts\activate
+
+	pip install -r requirements.txt
+	let it run and finish
+
+
+Then
+ open another terminal in same location/duplicate terminal and run 
+ prod_supp_chatbot_venv\Scripts\activate  
+
+update 
+l1_directory_path = "C:\\Personal\\Internship\\Sumeru\\RAG\\Demo\\NewData\\Data\\L1"
+l2_directory_path = "C:\\Personal\\Internship\\Sumeru\\RAG\\Demo\\NewData\\Data\\L2"
+
+with path to L1 and L2 folders respectively and then run these in a terminal each:
+
+uvicorn backend_updatable_start:app --reload
+
+Let this say Application Startup Complete, then in another terminal run - 
+
+streamlit run frontend_updatable_start.py
+
+2nd one should open the app
